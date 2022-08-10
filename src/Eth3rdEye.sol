@@ -18,6 +18,7 @@ contract Eth3rdEye {
   }
 
   // TODO: Cannot start session until submission epoch is over
+  // Tasker starts session
   function startSession( uint16 sessionIndex, bytes32 commitment ) public {
     uint16 nextIndex = lastSessionIndex + 1;
 
@@ -31,15 +32,18 @@ contract Eth3rdEye {
     lastSessionIndex = sessionIndex;
   }
 
+  // Psychic submit predictions
   function submitPrediction(uint16 sessionIndex, string calldata prediction) public {
 
     bytes32 predictionKey = keccak256(abi.encode(sessionIndex, msg.sender));
 
     predictions[predictionKey] = prediction;
 
+    // TODO: Another way to calc accuracy without storage? Off-chain events
     attempts[msg.sender]++;
   }
 
+  // Tasker reveal target
   // TODO: Ensure that reveal period expires after a time period to prevent non-reveals blocking
   function revealTarget(uint16 sessionIndex, string calldata salt, string calldata target) public {
     Session storage s = sessionsById[sessionIndex];
@@ -56,6 +60,7 @@ contract Eth3rdEye {
     s.target = target;
   }
 
+  // Psychic calls to claim their score
   function claimAccuracy(uint16 sessionIndex, string calldata prediction ) public {
 
     bytes32 predictionKey = keccak256(abi.encode(sessionIndex, msg.sender));
@@ -67,6 +72,7 @@ contract Eth3rdEye {
 
     require( bytes(s.target).length != 0, "Target not revealed");
 
+    // TODO: Check more efficient?
     bool targetsMatch = keccak256(abi.encode(prediction)) == keccak256(abi.encode(s.target));
     
     if(targetsMatch){
